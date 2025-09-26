@@ -8,7 +8,7 @@ from time import sleep
 import requests
 from config.logger_config import LoggerConfig
 from config.mongo_config import MongoConfig
-from config.variable_config import COINMARKETCAP_CONFIG
+from config.variable_config import COINMARKETCAP_CONFIG, MONGO_CONFIG
 
 
 class CMCExtract:
@@ -20,9 +20,9 @@ class CMCExtract:
             )
             self.mongo_config = MongoConfig()
             self.mongo_client = self.mongo_config.get_client()
-            self.clean_cmc_collection = COINMARKETCAP_CONFIG["clean_database"][
-                "clean_cmc_collection"
-            ]
+            self.clean_cmc_collection = self.mongo_client[
+                COINMARKETCAP_CONFIG["clean_database"]
+            ][COINMARKETCAP_CONFIG["clean_cmc_collection"]]
             self.cmc_url = COINMARKETCAP_CONFIG["cmc_url"]
             self.cmc_api = COINMARKETCAP_CONFIG["cmc_api"]
             self.cmc_interval_send_request = COINMARKETCAP_CONFIG[
@@ -48,7 +48,7 @@ class CMCExtract:
                 return None
             self.logger.info("Successfully retrieved the data.")
 
-            return data["data"]
+            return data
         except requests.exceptions.RequestException as e:
             self.logger.error(f"Request error: {str(e)}")
             return None
@@ -75,6 +75,7 @@ class CMCExtract:
                 r.append(data)
             except Exception as e:
                 self.logger.error(f"Error processing symbol {d["symbol"]}: {str(e)}")
+
         return r
 
     def cmc_load(self, cmc_transform_data):
@@ -98,7 +99,11 @@ class CMCExtract:
                 cmc_transform_data = self.cmc_transform(
                     cmc_extract_data=cmc_extract_data
                 )
+                self.logger.info("Successfully to transform 100 symbol data")
                 self.cmc_load(cmc_transform_data=cmc_transform_data)
+                self.logger.info(
+                    f"Wait for {self.cmc_interval_send_request} second to update new data"
+                )
                 sleep(self.cmc_interval_send_request)
         else:
             self.logger.warning(f"Not running extract CMC. Running is {running}")
