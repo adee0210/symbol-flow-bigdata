@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -8,7 +9,7 @@ from time import sleep
 import requests
 from config.logger_config import LoggerConfig
 from config.mongo_config import MongoConfig
-from config.variable_config import COINMARKETCAP_CONFIG, MONGO_CONFIG
+from config.variable_config import COINMARKETCAP_CONFIG
 
 
 class CMCExtract:
@@ -78,8 +79,19 @@ class CMCExtract:
 
         return r
 
+    def get_symbol(self, cmc_transform_data):
+        symbol_list = []
+        for data in cmc_transform_data:
+            symbol_list.append(data["symbol"])
+
+            with open(
+                "/home/duc/symbol_flow_big_data/data/processed/top100_symbol.json",
+                "w",
+            ) as f:
+                json.dump(symbol_list, f)
+
     def cmc_load(self, cmc_transform_data):
-        self.logger.info("Start load cmc transform data")
+        self.logger.info("Start load cmc transform data ...")
         try:
             for data in cmc_transform_data:
                 self.clean_cmc_collection.update_one(
@@ -99,6 +111,8 @@ class CMCExtract:
                 cmc_transform_data = self.cmc_transform(
                     cmc_extract_data=cmc_extract_data
                 )
+                self.get_symbol(cmc_transform_data=cmc_transform_data)
+
                 self.logger.info("Successfully to transform 100 symbol data")
                 self.cmc_load(cmc_transform_data=cmc_transform_data)
                 self.logger.info(

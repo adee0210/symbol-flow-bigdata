@@ -18,6 +18,7 @@ DEPTH_TRADE_BINANCE_CONFIG = {
     "clean_trade_collection": "trade",
     "clean_depth_collection": "depth",
     "clean_cmc_collection": "cmc",
+    "depth_trade_binance_url": "wss://stream.binance.com:9443/stream?streams=",
 }
 
 COINMARKETCAP_CONFIG = {
